@@ -1,18 +1,21 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import TaskList from '../components/TaskList.vue';
-import UserManagement from '../components/UserManagement.vue';
+// //import { createRouter, createWebHistory } from 'vue-router';
+// import ProjectList from '@/components/ProjectList.vue';
+// import FileList from '@/components/FileList.vue';
+// import EstimateList from '@/components/EstimateList.vue';
+// import RecordList from '@/components/RecordList.vue';
 
 
-// Определение маршрутов
-const routes = [
-  { path: '/', component: TaskList },  // Главная страница с задачами
-  { path: '/admin', component: UserManagement },  // Админская панель
-];
+// const routes = [
+//   { path: '/projects', component: ProjectList },
+//   { path: '/files', component: FileList },
+//   { path: '/estimates', component: EstimateList },
+//   { path: '/records', component: RecordList },
+//   //{ path: '/', redirect: '/projects' }, // Перенаправление на Projects по умолчанию
+// ];
 
-// Создание роутера
-const router = createRouter({
-  history: createWebHistory(),  // Используем HTML5 History API
-  routes,  // Передаем массив маршрутов
-});
+// const router = createRouter({
+//   history: createWebHistory(),
+//   routes,
+// });
 
-export default router;
+// export default router;    
