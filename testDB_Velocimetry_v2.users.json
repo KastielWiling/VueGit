@@ -1,0 +1,38 @@
+[{
+  "_id": {
+    "$oid": "67c50b356894a2f996befd6c"
+  },
+  "username": "User1",
+  "email": "1@gmail.com",
+  "password": "$argon2id$v=19$m=65536,t=3,p=4$ZKwV4nzPWSvFeG8tJaR07g$cIHSex5DDjyVTMuvNPe3QSwpb5wA6Yl1sAclajYwF0M",
+  "role": "admin",
+  "id": null
+},
+{
+  "_id": {
+    "$oid": "67c5eced47b83db5d065b2fa"
+  },
+  "username": "1",
+  "email": "1@gmail.com",
+  "password": "$argon2id$v=19$m=65536,t=3,p=4$wLh3bu1dq3XuXYsxRijFOA$cvTPY/LoGAjoSWvxBP6NTl/FFgadEHUIvAIVa+u4fSM",
+  "role": "admin"
+},
+{
+  "_id": {
+    "$oid": "67c5ee9b47b83db5d065b2fb"
+  },
+  "username": "2",
+  "email": "2@email.com",
+  "password": "$argon2id$v=19$m=65536,t=3,p=4$OOf8/19LCWGMsRai1JqT8g$jxi0p50BnQjR2T/BCzGxT/eIsQJMiuAVKPGaTiuXjwY",
+  "role": "user"
+},
+{
+  "_id": {
+    "$oid": "67c5f4322d52632564ecfa4d"
+  },
+  "username": "1",
+  "email": "1@gmail.com",
+  "password": "$argon2id$v=19$m=65536,t=3,p=4$A6A0RkhpLaWUsta6t9YaIw$4o5NrucxgzaWh0wD+PoXbzlo2iHXJ9XDFGG/IdGu8IY",
+  "role": "admin",
+  "id": null
+}]
