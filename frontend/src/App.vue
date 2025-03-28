@@ -65,7 +65,7 @@
     </div>
   </div>
 </template>
-
+z
 <script>
 import api from '@/api';
 import ProjectList from '@/components/ProjectList.vue';
@@ -190,17 +190,25 @@ export default {
     },
   },
   async created() {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+  const token = localStorage.getItem('token');
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expirationTime = payload.exp * 1000; // Время истечения в миллисекундах
+      if (Date.now() > expirationTime) {
+        // Токен истек
+        localStorage.removeItem('token');
+        this.isAuthenticated = false;
+      } else {
         this.currentUserRole = payload.role;
         this.isAuthenticated = true;
-      } catch (error) {
-        localStorage.removeItem('token');
       }
+    } catch (error) {
+      localStorage.removeItem('token');
+      this.isAuthenticated = false;
     }
-  },
+  }
+},
 };
 </script>
 

@@ -10,11 +10,15 @@
           <p>ROI: {{ estimate.roi.join(', ') }}</p>
         </div>
         <div class="card-actions">
+          <button @click="selectEstimate(estimate._id)" class="action-button">Select</button>
           <button @click="editEstimate(estimate)" class="action-button">Edit</button>
           <button @click="deleteEstimate(estimate._id)" class="action-button delete">Delete</button>
         </div>
       </div>
     </div>
+
+    <!-- Чат-окно -->
+    <ChatWindow v-if="selectedEstimateId" :estimateId="selectedEstimateId" />
 
     <!-- Модальное окно для создания/редактирования оценки -->
     <div v-if="isModalOpen" class="modal">
@@ -30,8 +34,12 @@
 
 <script>
 import api from '@/api';
+import ChatWindow from '@/components/ChatWindow.vue'; // Импортируем компонент чата
 
 export default {
+  components: {
+    ChatWindow, // Регистрируем компонент чата
+  },
   props: ['fileId'],
   data() {
     return {
@@ -44,6 +52,7 @@ export default {
         roi: [],
       },
       currentEstimateId: null,
+      selectedEstimateId: null, // Для выбранной оценки
     };
   },
   async created() {
@@ -66,36 +75,49 @@ export default {
     editEstimate(estimate) {
       this.isModalOpen = true;
       this.isEditing = true;
-      this.estimateForm = { ...estimate };
+      this.estimateForm = {
+        ...estimate,
+        frame_interval: estimate.frame_interval.join(','),
+        roi: estimate.roi.join(','),
+      };
       this.currentEstimateId = estimate._id;
     },
     async saveEstimate() {
-      const payload = {
-        file_id: [this.fileId],
-        frame_interval: Array.isArray(this.estimateForm.frame_interval)
-          ? this.estimateForm.frame_interval
-          : this.estimateForm.frame_interval.split(',').map(Number),
-        roi: Array.isArray(this.estimateForm.roi)
-          ? this.estimateForm.roi
-          : this.estimateForm.roi.split(',').map(Number),
-        tag: this.estimateForm.tag,
-        settings: {},
-      };
+  const payload = {
+    file_id: [this.fileId], // Передаем как массив строк
+    frame_interval: Array.isArray(this.estimateForm.frame_interval)
+      ? this.estimateForm.frame_interval
+      : this.estimateForm.frame_interval.split(',').map(Number),
+    roi: Array.isArray(this.estimateForm.roi)
+      ? this.estimateForm.roi
+      : this.estimateForm.roi.split(',').map(Number),
+    tag: this.estimateForm.tag,
+    settings: {},
+  };
 
-      if (this.isEditing) {
-        await api.put(`/estimates/${this.currentEstimateId}`, payload);
-      } else {
-        await api.post('/estimates/', payload);
-      }
-      this.closeModal();
-      await this.fetchEstimates();
-    },
+  try {
+    console.log("Sending payload:", payload);
+    if (this.isEditing) {
+      await api.put(`/estimates/${this.currentEstimateId}`, payload);
+    } else {
+      await api.post('/estimates/', payload);
+    }
+    this.closeModal();
+    await this.fetchEstimates();
+  } catch (error) {
+    console.error("Error saving estimate:", error.response?.data || error.message);
+  }
+},
     async deleteEstimate(estimateId) {
       await api.delete(`/estimates/${estimateId}`);
       await this.fetchEstimates();
     },
     closeModal() {
       this.isModalOpen = false;
+    },
+    // Метод для выбора оценки
+    selectEstimate(estimateId) {
+      this.selectedEstimateId = estimateId; // Устанавливаем выбранную оценку
     },
   },
 };

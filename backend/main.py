@@ -4,6 +4,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from jose import JWTError, jwt
 from passlib.hash import argon2
 from datetime import datetime, timedelta
+from bson import ObjectId  
 from typing import Optional
 from beanie import init_beanie
 from models import ProjectDB, FileDB, EstimateDB, RecordDB, UserDB, PyObjectId, UserRole
@@ -201,9 +202,27 @@ async def get_all_files():
 
 @app.get("/files/by_project/{project_id}", response_model=list[FileDB])
 async def get_files_by_project(project_id: str):
-    files = await FileDB.find({"projectID": {"$in": [PyObjectId(project_id)]}}).to_list()
-    return files
-
+    print(f"Request for project_id: {project_id}, type: {type(project_id)}")
+    
+    from bson import ObjectId
+    try:
+        obj_id = ObjectId(project_id)
+        print("Trying as ObjectId:", obj_id)
+        files = await FileDB.find({"projectID": {"$in": [obj_id]}}).to_list()
+        print(f"Found {len(files)} files with ObjectId")
+        
+        if not files:
+            print("Trying as string")
+            files = await FileDB.find({"projectID": {"$in": [project_id]}}).to_list()
+            print(f"Found {len(files)} files with string")
+            
+        return files
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        files = await FileDB.find({"projectID": {"$in": [project_id]}}).to_list()
+        print(f"Found {len(files)} files with string after error")
+        return files
+    
 @app.get("/files/{file_id}", response_model=FileDB)
 async def get_file(file_id: str):
     file = await FileDB.get(file_id)
@@ -213,8 +232,12 @@ async def get_file(file_id: str):
 
 @app.post("/files/", response_model=FileDB)
 async def create_file(file: FileDB):
-    # Преобразуем projectID в массив PyObjectId
-    file.projectID = [PyObjectId(item) for item in file.projectID]
+    # Преобразуем все projectID в ObjectId
+    from bson import ObjectId
+    file.projectID = [
+        ObjectId(pid) if ObjectId.is_valid(pid) else pid 
+        for pid in file.projectID
+    ]
     await file.create()
     return file
 
@@ -224,13 +247,13 @@ async def update_file(file_id: str, file: FileDB):
     if not existing_file:
         raise HTTPException(status_code=404, detail="File not found")
     
-    # Преобразуем projectID в массив PyObjectId
-    file.projectID = [PyObjectId(item) for item in file.projectID]
+    # Преобразуем projectID в ObjectId
+    file.projectID = [
+        ObjectId(pid) if isinstance(pid, str) and ObjectId.is_valid(pid) else pid
+        for pid in file.projectID
+    ]
     
-    # Используем оператор $set для обновления полей
-    update_data = {"$set": file.dict()}
-    await existing_file.update(update_data)
-    
+    await existing_file.update({"$set": file.dict()})
     return existing_file
 
 @app.delete("/files/{file_id}")
@@ -249,8 +272,26 @@ async def get_all_estimates():
 
 @app.get("/estimates/by_file/{file_id}", response_model=list[EstimateDB])
 async def get_estimates_by_file(file_id: str):
-    estimates = await EstimateDB.find({"file_id": {"$in": [PyObjectId(file_id)]}}).to_list()
-    return estimates
+    print(f"Request for file_id: {file_id}, type: {type(file_id)}")
+    
+    from bson import ObjectId
+    try:
+        obj_id = ObjectId(file_id)
+        print("Trying as ObjectId:", obj_id)
+        estimates = await EstimateDB.find({"file_id": {"$in": [obj_id]}}).to_list()
+        print(f"Found {len(estimates)} estimates with ObjectId")
+        
+        if not estimates:
+            print("Trying as string")
+            estimates = await EstimateDB.find({"file_id": {"$in": [file_id]}}).to_list()
+            print(f"Found {len(estimates)} estimates with string")
+            
+        return estimates
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        estimates = await EstimateDB.find({"file_id": {"$in": [file_id]}}).to_list()
+        print(f"Found {len(estimates)} estimates with string after error")
+        return estimates
 
 @app.get("/estimates/{estimate_id}", response_model=EstimateDB)
 async def get_estimate(estimate_id: str):
@@ -261,10 +302,25 @@ async def get_estimate(estimate_id: str):
  
 @app.post("/estimates/", response_model=EstimateDB)
 async def create_estimate(estimate: EstimateDB):
-    # Преобразуем file_id в массив PyObjectId
-    estimate.file_id = [PyObjectId(item) for item in estimate.file_id]
+    from bson import ObjectId
+    
+    print("Received estimate data:", estimate.dict())
+    
+    # Преобразуем file_id
+    original_ids = estimate.file_id.copy()
+    estimate.file_id = [
+        ObjectId(pid) if isinstance(pid, str) and ObjectId.is_valid(pid) else pid
+        for pid in estimate.file_id
+    ]
+    
+    print(f"Converted file_id from {original_ids} to {estimate.file_id}")
+    
     await estimate.create()
-    return estimate
+    
+    created_estimate = await EstimateDB.get(estimate.id)
+    print("Created estimate:", created_estimate.dict())
+    
+    return created_estimate
 
 @app.put("/estimates/{estimate_id}", response_model=EstimateDB)
 async def update_estimate(estimate_id: str, estimate: EstimateDB):
@@ -272,13 +328,13 @@ async def update_estimate(estimate_id: str, estimate: EstimateDB):
     if not existing_estimate:
         raise HTTPException(status_code=404, detail="Estimate not found")
     
-    # Преобразуем file_id в массив PyObjectId
-    estimate.file_id = [PyObjectId(item) for item in estimate.file_id]
+    # Преобразуем file_id в ObjectId
+    estimate.file_id = [
+        ObjectId(fid) if isinstance(fid, str) and ObjectId.is_valid(fid) else fid
+        for fid in estimate.file_id
+    ]
     
-    # Используем оператор $set для обновления полей
-    update_data = {"$set": estimate.dict()}
-    await existing_estimate.update(update_data)
-    
+    await existing_estimate.update({"$set": estimate.dict()})
     return existing_estimate
 
 @app.delete("/estimates/{estimate_id}")
@@ -293,6 +349,11 @@ async def delete_estimate(estimate_id: str):
 @app.get("/records/", response_model=list[RecordDB])
 async def get_all_records():
     records = await RecordDB.find_all().to_list()
+    return records
+
+@app.get("/records/by_estimate/{estimate_id}", response_model=list[RecordDB])
+async def get_records_by_estimate(estimate_id: str):
+    records = await RecordDB.find({"estimate_id": {"$in": [PyObjectId(estimate_id)]}}).to_list()
     return records
 
 @app.get("/records/{record_id}", response_model=RecordDB)
@@ -313,7 +374,6 @@ async def update_record(record_id: str, record: RecordDB):
     if not existing_record:
         raise HTTPException(status_code=404, detail="Record not found")
     
-    # Используем оператор $set для обновления полей
     update_data = {"$set": record.dict()}
     await existing_record.update(update_data)
     

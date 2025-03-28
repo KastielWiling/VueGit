@@ -60,8 +60,15 @@ export default {
   },
   methods: {
     async fetchFiles() {
-      const response = await api.get(`/files/by_project/${this.projectId}`);
-      this.files = response.data;
+      console.log("Fetching files for project ID:", this.projectId);
+      try {
+        const response = await api.get(`/files/by_project/${this.projectId}`);
+        console.log("Files found:", response.data);
+        this.files = response.data;
+      } catch (error) {
+        console.error("Error fetching files:", error);
+        this.files = [];
+      }
     },
     selectFile(fileId) {
       this.$emit('select-file', fileId);
@@ -83,8 +90,9 @@ export default {
   this.isEditing = true;
   this.fileForm = {
     ...file,
-    fps: file.fps ? file.fps.join(',') : '', 
-    frameSize: file.frameSize ? file.frameSize.join(',') : '', 
+    fps: file.fps ? file.fps.join(',') : '',
+    frameSize: file.frameSize ? file.frameSize.join(',') : '',
+    projectID: file.projectID[0], // Убедитесь, что это строка
   };
   this.currentFileId = file._id;
 },
@@ -93,22 +101,17 @@ async saveFile() {
     name: this.fileForm.name,
     filePath: this.fileForm.filePath,
     tag: this.fileForm.tag,
-    projectID: [this.projectId],
+    projectID: [this.projectId], // Убедитесь, что это строка
     frameCount: this.fileForm.frameCount,
     fps: this.fileForm.tag === 'meta_file' 
-      ? (this.fileForm.fps && typeof this.fileForm.fps === 'string' 
-         ? this.fileForm.fps.split(',').map(Number) 
-         : []) 
+      ? (this.fileForm.fps ? this.fileForm.fps.split(',').map(Number) : [])
       : [],
-    frameSize: this.fileForm.tag === 'meta_file' 
-      ? (this.fileForm.frameSize && typeof this.fileForm.frameSize === 'string' 
-         ? this.fileForm.frameSize.split(',').map(Number) 
-         : []) 
-      : [],
+    frameSize: this.fileForm.tag === 'meta_file'
+      ? (this.fileForm.frameSize ? this.fileForm.frameSize.split(',').map(Number) : [])
+      : []
   };
 
   try {
-    console.log("Payload before sending:", payload); 
     if (this.isEditing) {
       await api.put(`/files/${this.currentFileId}`, payload);
     } else {
@@ -117,7 +120,7 @@ async saveFile() {
     this.closeModal();
     await this.fetchFiles();
   } catch (error) {
-    console.error("Error saving file:", error.response?.data || error.message);
+    console.error("Error saving file:", error);
   }
 },
     async deleteFile(fileId) {

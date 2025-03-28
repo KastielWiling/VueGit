@@ -322,54 +322,49 @@ export default {
       };
     },
     editFile(file) {
-      this.isFileModalOpen = true;
-      this.isEditingFile = true;
-      this.fileForm = {
-        ...file,
-        fps: file.fps ? file.fps.join(',') : '', 
-        frameSize: file.frameSize ? file.frameSize.join(',') : '', 
-        projectID: file.projectID[0], 
-      };
-      this.currentFileId = file._id;
-    },
-    async saveFile() {
-      // Проверяем, что projectID выбран
-      if (!this.fileForm.projectID) {
-        console.error("Project ID is not set.");
-        return;
-      }
+  this.isFileModalOpen = true;
+  this.isEditingFile = true;
+  this.fileForm = {
+    ...file,
+    fps: file.fps ? file.fps.join(',') : '',
+    frameSize: file.frameSize ? file.frameSize.join(',') : '',
+    projectID: file.projectID[0]?.toString() // Преобразуем в строку
+  };
+  this.currentFileId = file._id;
+},
 
-      const payload = {
-        name: this.fileForm.name,
-        filePath: this.fileForm.filePath,
-        tag: this.fileForm.tag,
-        projectID: [this.fileForm.projectID], // Передаем projectID как массив
-        frameCount: this.fileForm.frameCount,
-        fps: this.fileForm.tag === 'meta_file'
-          ? (this.fileForm.fps && typeof this.fileForm.fps === 'string'
-             ? this.fileForm.fps.split(',').map(Number)
-             : [])
-          : [],
-        frameSize: this.fileForm.tag === 'meta_file'
-          ? (this.fileForm.frameSize && typeof this.fileForm.frameSize === 'string'
-             ? this.fileForm.frameSize.split(',').map(Number)
-             : [])
-          : [],
-      };
+async saveFile() {
+  if (!this.fileForm.projectID) {
+    console.error("Project ID is not set.");
+    return;
+  }
 
-      try {
-        console.log("Payload before sending:", payload); 
-        if (this.isEditingFile) {
-          await api.put(`/files/${this.currentFileId}`, payload);
-        } else {
-          await api.post('/files/', payload);
-        }
-        this.closeFileModal();
-        await this.fetchFiles();
-      } catch (error) {
-        console.error("Error saving file:", error.response?.data || error.message);
-      }
-    },
+  const payload = {
+    name: this.fileForm.name,
+    filePath: this.fileForm.filePath,
+    tag: this.fileForm.tag,
+    projectID: [this.fileForm.projectID], // Массив строк
+    frameCount: this.fileForm.frameCount,
+    fps: this.fileForm.tag === 'meta_file'
+      ? (this.fileForm.fps ? this.fileForm.fps.split(',').map(Number) : [])
+      : [],
+    frameSize: this.fileForm.tag === 'meta_file'
+      ? (this.fileForm.frameSize ? this.fileForm.frameSize.split(',').map(Number) : [])
+      : []
+  };
+
+  try {
+    if (this.isEditingFile) {
+      await api.put(`/files/${this.currentFileId}`, payload);
+    } else {
+      await api.post('/files/', payload);
+    }
+    this.closeFileModal();
+    await this.fetchFiles();
+  } catch (error) {
+    console.error("Error saving file:", error.response?.data || error.message);
+  }
+},
     async deleteFile(fileId) {
       await api.delete(`/files/${fileId}`);
       await this.fetchFiles();
@@ -390,45 +385,43 @@ export default {
       };
     },
     editEstimate(estimate) {
-      this.isEstimateModalOpen = true;
-      this.isEditingEstimate = true;
-      this.estimateForm = {
-        ...estimate,
-        file_id: estimate.file_id[0], 
-      };
-      this.currentEstimateId = estimate._id;
-    },
-    async saveEstimate() {
-      if (!this.estimateForm.file_id) {
-        console.error("File ID is not set.");
-        return;
-      }
+  this.isEstimateModalOpen = true;
+  this.isEditingEstimate = true;
+  this.estimateForm = {
+    ...estimate,
+    frame_interval: estimate.frame_interval.join(','),
+    roi: estimate.roi.join(','),
+    file_id: estimate.file_id[0]?.toString() // Преобразуем в строку
+  };
+  this.currentEstimateId = estimate._id;
+},
 
-      const payload = {
-        tag: this.estimateForm.tag,
-        frame_interval: Array.isArray(this.estimateForm.frame_interval)
-          ? this.estimateForm.frame_interval
-          : this.estimateForm.frame_interval.split(',').map(Number),
-        roi: Array.isArray(this.estimateForm.roi)
-          ? this.estimateForm.roi
-          : this.estimateForm.roi.split(',').map(Number),
-        file_id: [this.estimateForm.file_id], 
-        settings: {}, 
-      };
+async saveEstimate() {
+  if (!this.estimateForm.file_id) {
+    console.error("File ID is not set.");
+    return;
+  }
 
-      try {
-        console.log("Payload before sending:", payload); 
-        if (this.isEditingEstimate) {
-          await api.put(`/estimates/${this.currentEstimateId}`, payload);
-        } else {
-          await api.post('/estimates/', payload);
-        }
-        this.closeEstimateModal();
-        await this.fetchEstimates();
-      } catch (error) {
-        console.error("Error saving estimate:", error.response?.data || error.message);
-      }
-    },
+  const payload = {
+    tag: this.estimateForm.tag,
+    frame_interval: this.estimateForm.frame_interval.split(',').map(Number),
+    roi: this.estimateForm.roi.split(',').map(Number),
+    file_id: [this.estimateForm.file_id], // Массив строк
+    settings: {}
+  };
+
+  try {
+    if (this.isEditingEstimate) {
+      await api.put(`/estimates/${this.currentEstimateId}`, payload);
+    } else {
+      await api.post('/estimates/', payload);
+    }
+    this.closeEstimateModal();
+    await this.fetchEstimates();
+  } catch (error) {
+    console.error("Error saving estimate:", error.response?.data || error.message);
+  }
+},
     async deleteEstimate(estimateId) {
       await api.delete(`/estimates/${estimateId}`);
       await this.fetchEstimates();
