@@ -13,7 +13,7 @@
     "$oid": "6386d2d24055ab07d34d0069"
   },
   "name": "set",
-  "desc": "",
+  "desc": "1",
   "something": [],
   "tag": "video_project",
   "id": null
@@ -23,7 +23,7 @@
     "$oid": "638db08f31374ca23417f45c"
   },
   "name": "prop",
-  "desc": "",
+  "desc": "1",
   "something": [],
   "tag": "video_project1",
   "id": null
@@ -35,7 +35,7 @@
   "name": "photo",
   "desc": "1111",
   "something": [],
-  "tag": "default_tag",
+  "tag": "video_project",
   "id": null
 },
 {
@@ -64,7 +64,9 @@
   "desc": "modelling",
   "something": [],
   "tag": "video_project",
-  "id": null
+  "id": {
+    "$oid": "63bd68a49b3437ad691eb392"
+  }
 },
 {
   "_id": {
@@ -91,7 +93,10 @@
   "name": "guar_inlet_0",
   "desc": "long_rec",
   "something": [],
-  "tag": "video_project"
+  "tag": "video_project",
+  "id": {
+    "$oid": "640eafdb08839054aca4cd0a"
+  }
 },
 {
   "_id": {
@@ -100,7 +105,7 @@
   "name": "acryl_inlet_0",
   "desc": "long_rec",
   "something": [],
-  "tag": "default_tag",
+  "tag": "video_project",
   "id": null
 },
 {
@@ -148,5 +153,6 @@
   "name": "132",
   "desc": "12312",
   "something": [],
-  "tag": "default_tag"
+  "tag": "default_tag",
+  "id": null
 }]

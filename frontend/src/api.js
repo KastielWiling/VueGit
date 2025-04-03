@@ -18,11 +18,20 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Токен истек или недействителен
-      localStorage.removeItem('token');
-      router.push('/login'); // Перенаправляем на страницу авторизации
+    const originalRequest = error.config;
+    
+    // Игнорируем ошибки для эндпоинтов авторизации и логирования
+    const ignoredEndpoints = ['/token/', '/admin/activity'];
+    if (ignoredEndpoints.some(endpoint => originalRequest.url.includes(endpoint))) {
+      return Promise.reject(error);
     }
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      localStorage.removeItem('token');
+      router.push('/login');
+    }
+    
     return Promise.reject(error);
   }
 );

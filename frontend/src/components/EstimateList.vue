@@ -1,251 +1,384 @@
 <template>
-  <div>
-    <h1>Estimates</h1>
-    <button @click="openCreateEstimateModal" class="create-button">Create Estimate</button>
-    <div class="card-container">
-      <div v-for="estimate in estimates" :key="estimate._id" class="card">
-        <div class="card-content">
-          <span>{{ estimate.tag }}</span>
-          <p>Frame Interval: {{ estimate.frame_interval.join(', ') }}</p>
-          <p>ROI: {{ estimate.roi.join(', ') }}</p>
+  <div class="estimate-list-container">
+    <div class="header-section">
+      <h1>Estimates</h1>
+      <button @click="openCreateEstimateModal" class="create-button">
+        Create Estimate
+      </button>
+    </div>
+
+    <div class="split-layout">
+      <div class="estimates-panel">
+        <div class="search-controls">
+          <input 
+            v-model="searchEstimate" 
+            placeholder="Search estimates..." 
+            class="search-input"
+          >
         </div>
-        <div class="card-actions">
-          <button @click="selectEstimate(estimate._id)" class="action-button">Select</button>
-          <button @click="editEstimate(estimate)" class="action-button">Edit</button>
-          <button @click="deleteEstimate(estimate._id)" class="action-button delete">Delete</button>
+        <div class="estimates-list">
+          <div 
+            v-for="estimate in filteredEstimates" 
+            :key="estimate._id" 
+            class="estimate-card"
+            :class="{ 'selected': estimate._id === selectedEstimateId }"
+          >
+            <div class="estimate-content" @click="selectEstimate(estimate._id)">
+              <div class="estimate-info">
+                <span class="estimate-tag">{{ estimate.tag }}</span>
+                <div class="estimate-details">
+                  <span>Frames: {{ estimate.frame_interval.join(', ') }}</span>
+                  <span>ROI: {{ estimate.roi.join(', ') }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="estimate-actions">
+              <button @click.stop="openEditEstimateModal(estimate)" class="action-button edit">
+                Edit
+              </button>
+              <button @click.stop="deleteEstimate(estimate._id)" class="action-button delete">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="records-panel">
+        <ChatWindow 
+          v-if="selectedEstimateId" 
+          :estimateId="selectedEstimateId"
+          :key="selectedEstimateId"
+        />
+        <div v-else class="empty-state">
+          Select an estimate to view records
         </div>
       </div>
     </div>
 
-    <!-- Чат-окно -->
-    <ChatWindow v-if="selectedEstimateId" :estimateId="selectedEstimateId" />
-
-    <!-- Модальное окно для создания/редактирования оценки -->
-    <div v-if="isModalOpen" class="modal">
-      <h2>{{ isEditing ? 'Edit Estimate' : 'Create Estimate' }}</h2>
-      <input v-model="estimateForm.tag" placeholder="Tag" />
-      <input v-model="estimateForm.frame_interval" placeholder="Frame Interval (comma separated)" />
-      <input v-model="estimateForm.roi" placeholder="ROI (comma separated)" />
-      <button @click="saveEstimate" class="modal-button">Save</button>
-      <button @click="closeModal" class="modal-button cancel">Cancel</button>
-    </div>
+    <EstimateModal
+      v-if="isModalOpen"
+      :isOpen="isModalOpen"
+      :isEditing="isEditing"
+      :estimateData="estimateForm"
+      @save="handleSaveEstimate"
+      @close="closeModal"
+      :key="modalKey"
+    />
   </div>
 </template>
 
 <script>
 import api from '@/api';
-import ChatWindow from '@/components/ChatWindow.vue'; // Импортируем компонент чата
+import ChatWindow from '@/components/ChatWindow.vue';
+import EstimateModal from '@/components/EstimateModal.vue';
 
 export default {
   components: {
-    ChatWindow, // Регистрируем компонент чата
+    ChatWindow,
+    EstimateModal
   },
-  props: ['fileId'],
+  props: {
+    fileId: {
+      type: String,
+      required: true
+    }
+  },
   data() {
     return {
       estimates: [],
+      searchEstimate: '',
       isModalOpen: false,
       isEditing: false,
       estimateForm: {
         tag: '',
-        frame_interval: [],
-        roi: [],
+        frame_interval: '',
+        roi: ''
       },
       currentEstimateId: null,
-      selectedEstimateId: null, // Для выбранной оценки
+      selectedEstimateId: null,
+      modalKey: 0
     };
   },
-  async created() {
-    await this.fetchEstimates();
+  computed: {
+    filteredEstimates() {
+      return this.estimates.filter(est => 
+        est.tag.toLowerCase().includes(this.searchEstimate.toLowerCase()) ||
+        est.frame_interval.join(',').includes(this.searchEstimate) ||
+        est.roi.join(',').includes(this.searchEstimate)
+      );
+    }
   },
   methods: {
     async fetchEstimates() {
-      const response = await api.get(`/estimates/by_file/${this.fileId}`);
-      this.estimates = response.data;
+      try {
+        const response = await api.get(`/estimates/by_file/${this.fileId}`);
+        this.estimates = response.data;
+      } catch (error) {
+        console.error("Error fetching estimates:", error);
+        alert("Failed to load estimates");
+      }
     },
+
+    selectEstimate(estimateId) {
+      this.selectedEstimateId = estimateId;
+    },
+
     openCreateEstimateModal() {
       this.isModalOpen = true;
       this.isEditing = false;
       this.estimateForm = {
         tag: '',
-        frame_interval: [],
-        roi: [],
+        frame_interval: '',
+        roi: ''
       };
+      this.currentEstimateId = null;
+      this.modalKey += 1;
     },
-    editEstimate(estimate) {
+
+    openEditEstimateModal(estimate) {
       this.isModalOpen = true;
       this.isEditing = true;
       this.estimateForm = {
-        ...estimate,
+        tag: estimate.tag,
         frame_interval: estimate.frame_interval.join(','),
-        roi: estimate.roi.join(','),
+        roi: estimate.roi.join(',')
       };
       this.currentEstimateId = estimate._id;
+      this.modalKey += 1;
     },
-    async saveEstimate() {
-  const payload = {
-    file_id: [this.fileId], // Передаем как массив строк
-    frame_interval: Array.isArray(this.estimateForm.frame_interval)
-      ? this.estimateForm.frame_interval
-      : this.estimateForm.frame_interval.split(',').map(Number),
-    roi: Array.isArray(this.estimateForm.roi)
-      ? this.estimateForm.roi
-      : this.estimateForm.roi.split(',').map(Number),
-    tag: this.estimateForm.tag,
-    settings: {},
-  };
 
-  try {
-    console.log("Sending payload:", payload);
-    if (this.isEditing) {
-      await api.put(`/estimates/${this.currentEstimateId}`, payload);
-    } else {
-      await api.post('/estimates/', payload);
-    }
-    this.closeModal();
-    await this.fetchEstimates();
-  } catch (error) {
-    console.error("Error saving estimate:", error.response?.data || error.message);
-  }
-},
-    async deleteEstimate(estimateId) {
-      await api.delete(`/estimates/${estimateId}`);
-      await this.fetchEstimates();
+    async handleSaveEstimate(estimateData) {
+      try {
+        // Преобразование данных в правильный формат
+        const frameInterval = typeof estimateData.frame_interval === 'string'
+          ? estimateData.frame_interval.split(',').map(Number).filter(n => !isNaN(n))
+          : estimateData.frame_interval;
+        
+        const roi = typeof estimateData.roi === 'string'
+          ? estimateData.roi.split(',').map(Number).filter(n => !isNaN(n))
+          : estimateData.roi;
+
+        const payload = {
+          file_id: [this.fileId],
+          frame_interval: frameInterval,
+          roi: roi,
+          tag: estimateData.tag,
+          settings: {}
+        };
+
+        if (this.isEditing) {
+          await api.put(`/estimates/${this.currentEstimateId}`, payload);
+          alert("Estimate updated successfully");
+        } else {
+          await api.post('/estimates/', payload);
+          alert("Estimate created successfully");
+        }
+        
+        this.closeModal();
+        await this.fetchEstimates();
+      } catch (error) {
+        console.error("Error saving estimate:", error);
+        alert(`Error: ${error.response?.data?.message || error.message}`);
+      }
     },
+
+    async deleteEstimate(estimateId) {
+      if (confirm("Are you sure you want to delete this estimate?")) {
+        try {
+          await api.delete(`/estimates/${estimateId}`);
+          await this.fetchEstimates();
+          if (this.selectedEstimateId === estimateId) {
+            this.selectedEstimateId = null;
+          }
+          alert("Estimate deleted successfully");
+        } catch (error) {
+          console.error("Error deleting estimate:", error);
+          alert("Failed to delete estimate");
+        }
+      }
+    },
+
     closeModal() {
       this.isModalOpen = false;
-    },
-    // Метод для выбора оценки
-    selectEstimate(estimateId) {
-      this.selectedEstimateId = estimateId; // Устанавливаем выбранную оценку
-    },
+    }
   },
+  async created() {
+    await this.fetchEstimates();
+  },
+  watch: {
+    fileId: {
+      immediate: true,
+      handler(newVal) {
+        if (newVal) {
+          this.fetchEstimates();
+        }
+      }
+    }
+  }
 };
 </script>
 
 <style scoped>
+.estimate-list-container {
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 .create-button {
   background-color: #292961;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 10px 15px;
   border-radius: 4px;
   cursor: pointer;
-  margin-bottom: 20px;
-  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
 }
 
 .create-button:hover {
   background-color: #3a3a7a;
+  transform: translateY(-1px);
 }
 
-.card-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.card {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.card-content {
-  padding: 20px;
-}
-
-.card-content span {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.card-content p {
-  margin: 10px 0 0;
-  color: #666;
-}
-
-.card-actions {
+.split-layout {
   display: flex;
-  justify-content: flex-end;
+  flex: 1;
+  gap: 20px;
+  height: calc(100% - 60px);
+}
+
+.estimates-panel {
+  width: 350px;
+  border-right: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+}
+
+.records-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-controls {
   padding: 10px;
-  background-color: #f9f9f9;
+  background: #f8f8f8;
+  border-bottom: 1px solid #eee;
 }
 
-.action-button {
-  background-color: #292961;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-left: 10px;
-  transition: background-color 0.3s;
-}
-
-.action-button:hover {
-  background-color: #3a3a7a;
-}
-
-.action-button.delete {
-  background-color: #ff4d4d;
-}
-
-.action-button.delete:hover {
-  background-color: #ff6666;
-}
-
-.modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  width: 300px;
-}
-
-.modal h2 {
-  margin-top: 0;
-}
-
-.modal input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
+.search-input {
+  width: 90%;
+  padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
 
-.modal-button {
-  background-color: #292961;
-  color: white;
+.estimates-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.estimate-card {
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  justify-content: space-between;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.estimate-card:hover {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.estimate-card.selected {
+  border-left: 3px solid #292961;
+  background-color: #f0f0ff;
+}
+
+.estimate-content {
+  flex: 1;
+  cursor: pointer;
+}
+
+.estimate-info {
+  margin-bottom: 5px;
+}
+
+.estimate-tag {
+  font-weight: bold;
+  display: block;
+  color: #292961;
+}
+
+.estimate-details {
+  font-size: 0.85em;
+  color: #666;
+}
+
+.estimate-details span {
+  display: block;
+  margin: 2px 0;
+}
+
+.estimate-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.action-button {
+  padding: 6px 12px;
   border: none;
-  padding: 10px 20px;
   border-radius: 4px;
   cursor: pointer;
-  margin-right: 10px;
-  transition: background-color 0.3s;
+  font-size: 0.85em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
 }
 
-.modal-button:hover {
-  background-color: #3a3a7a;
+.action-button.edit {
+  background-color: #292961;
+  color: white;
 }
 
-.modal-button.cancel {
+.action-button.delete {
   background-color: #ff4d4d;
+  color: white;
 }
 
-.modal-button.cancel:hover {
-  background-color: #ff6666;
+.action-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+  font-size: 1.1em;
+}
+
+.empty-state i {
+  font-size: 2em;
+  margin-bottom: 10px;
 }
 </style>

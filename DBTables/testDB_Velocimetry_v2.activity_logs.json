@@ -1,0 +1,208 @@
+[{
+  "_id": {
+    "$oid": "67eeeeb86e335376bcb78f9b"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "login",
+  "entity_type": null,
+  "entity_id": null,
+  "details": "User logged in",
+  "timestamp": {
+    "$date": "2025-04-03T20:25:28.544Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67eeeebf6e335376bcb78f9c"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "update",
+  "entity_type": "project",
+  "entity_id": "6386cf4d0cffbc9ee71ad11d",
+  "details": "Updated project asd",
+  "timestamp": {
+    "$date": "2025-04-03T20:25:35.857Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67eef35f17d0aa351a9f72cf"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "login",
+  "entity_type": null,
+  "entity_id": null,
+  "details": "User logged in",
+  "timestamp": {
+    "$date": "2025-04-03T20:45:19.710Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67eef3945fc03608eedc934a"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "login",
+  "entity_type": null,
+  "entity_id": null,
+  "details": "User logged in",
+  "timestamp": {
+    "$date": "2025-04-03T20:46:12.271Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67eef3ad58f24582c3c828d3"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "login",
+  "entity_type": null,
+  "entity_id": null,
+  "details": "User logged in",
+  "timestamp": {
+    "$date": "2025-04-03T20:46:37.434Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67eef4a4563adfaaacdd4e82"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "update",
+  "entity_type": "user",
+  "entity_id": "67eee1361c0c0ca828e7c3c2",
+  "details": "Updated user TestUser",
+  "timestamp": {
+    "$date": "2025-04-03T20:50:44.987Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67eef4ab563adfaaacdd4e83"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "update",
+  "entity_type": "project",
+  "entity_id": "640eafdb08839054aca4cd0a",
+  "details": "Updated project guar_inlet_0",
+  "timestamp": {
+    "$date": "2025-04-03T20:50:51.424Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67eefb3d563adfaaacdd4e84"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "login",
+  "entity_type": null,
+  "entity_id": null,
+  "details": "User logged in",
+  "timestamp": {
+    "$date": "2025-04-03T21:18:53.157Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67eefb42563adfaaacdd4e85"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "update",
+  "entity_type": "project",
+  "entity_id": "6386cf4d0cffbc9ee71ad11d",
+  "details": "Updated project asd",
+  "timestamp": {
+    "$date": "2025-04-03T21:18:58.735Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67eefe72563adfaaacdd4e86"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "update",
+  "entity_type": "project",
+  "entity_id": "63bd68a49b3437ad691eb392",
+  "details": "Updated project crack1",
+  "timestamp": {
+    "$date": "2025-04-03T21:32:34.088Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67eefe7f563adfaaacdd4e87"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "update",
+  "entity_type": "project",
+  "entity_id": "63bd68a49b3437ad691eb392",
+  "details": "Updated project crack1",
+  "timestamp": {
+    "$date": "2025-04-03T21:32:47.094Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67ef00eb563adfaaacdd4e88"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "delete",
+  "entity_type": "project",
+  "entity_id": "67eee14c1c0c0ca828e7c3c3",
+  "details": "Deleted project with ID 67eee14c1c0c0ca828e7c3c3",
+  "timestamp": {
+    "$date": "2025-04-03T21:43:07.136Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67ef00f8563adfaaacdd4e8a"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "create",
+  "entity_type": "project",
+  "entity_id": "67ef00f8563adfaaacdd4e89",
+  "details": "Created new project TestProject1",
+  "timestamp": {
+    "$date": "2025-04-03T21:43:20.424Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67ef01bf563adfaaacdd4e8b"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "login",
+  "entity_type": null,
+  "entity_id": null,
+  "details": "User logged in",
+  "timestamp": {
+    "$date": "2025-04-03T21:46:39.465Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67ef01ce563adfaaacdd4e8c"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "update",
+  "entity_type": "project",
+  "entity_id": "6386cf4d0cffbc9ee71ad11d",
+  "details": "Updated project asd",
+  "timestamp": {
+    "$date": "2025-04-03T21:46:54.317Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67ef02b8563adfaaacdd4e8d"
+  },
+  "user_id": "67c5eced47b83db5d065b2fa",
+  "action": "update",
+  "entity_type": "project",
+  "entity_id": "6386d2d24055ab07d34d0069",
+  "details": "Updated project set",
+  "timestamp": {
+    "$date": "2025-04-03T21:50:48.505Z"
+  }
+}]

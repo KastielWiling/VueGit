@@ -5,6 +5,7 @@ from beanie import Document
 from bson import ObjectId
 from pydantic.json_schema import GetJsonSchemaHandler
 from pydantic_core import core_schema
+from datetime import datetime
 
 # Кастомный тип для ObjectId
 class PyObjectId(str):
@@ -18,9 +19,11 @@ class PyObjectId(str):
 
     @classmethod
     def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
-        return str(v)
+        if isinstance(v, str) and ObjectId.is_valid(v):
+            return v
+        if isinstance(v, ObjectId):
+            return str(v)
+        raise ValueError("Invalid ObjectId")
 
     @classmethod
     def __get_pydantic_json_schema__(cls, core_schema, handler):
@@ -45,9 +48,6 @@ class MetaFile(FileBase):
 
 class MetaPhoto(FileBase):
     frameCount: int
-
-from pydantic import field_validator
-from bson import ObjectId
 
 class FileDB(Document):
     name: str
@@ -158,3 +158,23 @@ class User(BaseModel):
 class UserDB(User, Document):
     class Settings:
         name = "users"  # Название коллекции в MongoDB
+
+
+class ActivityLog(Document):
+    user_id: PyObjectId
+    action: str
+    entity_type: Optional[str] = None
+    entity_id: Optional[PyObjectId] = None
+    details: str = ""
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+    class Settings:
+        name = "activity_logs"
+
+    @field_validator('user_id', 'entity_id', mode='before')
+    def convert_to_pyobjectid(cls, v):
+        if isinstance(v, ObjectId):
+            return str(v)
+        if isinstance(v, str) and ObjectId.is_valid(v):
+            return v
+        return None

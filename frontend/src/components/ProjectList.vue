@@ -7,6 +7,7 @@
         <div class="card-content">
           <span>{{ project.name }}</span>
           <p>{{ project.desc }}</p>
+          <p class="tag">Tag: {{ project.tag }}</p>
         </div>
         <div class="card-actions">
           <button @click="selectProject(project._id)" class="action-button">Select</button>
@@ -21,6 +22,7 @@
       <h2>{{ isEditing ? 'Edit Project' : 'Create Project' }}</h2>
       <input v-model="projectForm.name" placeholder="Name" />
       <input v-model="projectForm.desc" placeholder="Description" />
+      <input v-model="projectForm.tag" placeholder="Tag" />
       <button @click="saveProject" class="modal-button">Save</button>
       <button @click="closeModal" class="modal-button cancel">Cancel</button>
     </div>
@@ -39,6 +41,7 @@ export default {
       projectForm: {
         name: '',
         desc: '',
+        tag: 'default_tag',
       },
       currentProjectId: null,
     };
@@ -57,12 +60,16 @@ export default {
     openCreateProjectModal() {
       this.isModalOpen = true;
       this.isEditing = false;
-      this.projectForm = { name: '', desc: '' };
+      this.projectForm = { name: '', desc: '', tag: 'default_tag' };
     },
     editProject(project) {
       this.isModalOpen = true;
       this.isEditing = true;
-      this.projectForm = { name: project.name, desc: project.desc };
+      this.projectForm = { 
+        name: project.name, 
+        desc: project.desc,
+        tag: project.tag || 'default_tag' // Сохраняем текущий тег или используем дефолтный
+      };
       this.currentProjectId = project._id;
     },
     async saveProject() {
@@ -70,7 +77,7 @@ export default {
         name: this.projectForm.name,
         desc: this.projectForm.desc,
         something: [],
-        tag: "default_tag",
+        tag: this.projectForm.tag || 'default_tag', // Используем введенный тег или дефолтный
       };
 
       if (this.isEditing) {
@@ -139,6 +146,11 @@ export default {
 .card-content p {
   margin: 10px 0 0;
   color: #666;
+}
+
+.tag {
+  font-style: italic;
+  color: #888;
 }
 
 .card-actions {

@@ -68,17 +68,23 @@
 z
 <script>
 import api from '@/api';
+import { useToast } from 'vue-toastification';
 import ProjectList from '@/components/ProjectList.vue';
 import FileList from '@/components/FileList.vue';
 import EstimateList from '@/components/EstimateList.vue';
 import AdminPanel from '@/components/AdminPanel.vue';
 
 export default {
+  
   components: {
     ProjectList,
     FileList,
     EstimateList,
     AdminPanel,
+  },
+  setup() {
+    const toast = useToast();
+    return { toast };
   },
   data() {
     return {
@@ -108,30 +114,52 @@ export default {
         formData.append('username', this.loginForm.username);
         formData.append('password', this.loginForm.password);
 
+        // 1. Запрос на авторизацию
         const response = await api.post('/token/', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
+        
+        // 2. Успешная авторизация
         localStorage.setItem('token', response.data.access_token);
         this.isAuthenticated = true;
 
         const token = response.data.access_token;
         const payload = JSON.parse(atob(token.split('.')[1]));
         this.currentUserRole = payload.role;
-
+        
         this.closeLoginModal();
         this.loginForm = { username: '', password: '' };
-
         this.currentView = 'projects';
 
-        this.$nextTick(() => {
-          if (this.$refs.projectList && this.$refs.projectList.fetchProjects) {
-            this.$refs.projectList.fetchProjects();
+        try {
+          // 3. Логирование входа (отдельный try-catch)
+          await api.post('/admin/activity', {
+            action: 'login',
+            entityType: 'user',
+            entityId: payload.sub,
+            details: 'User logged in'
+          });
+        } catch (logError) {
+          console.error("Logging failed:", logError);
+          // Не показываем пользователю ошибку логирования
+        }
+
+        // 4. Загрузка проектов (отдельный try-catch)
+        this.$nextTick(async () => {
+          try {
+            if (this.$refs.projectList?.fetchProjects) {
+              await this.$refs.projectList.fetchProjects();
+            }
+          } catch (fetchError) {
+            console.error("Failed to fetch projects:", fetchError);
           }
         });
-      } catch (error) {
-        console.error("Login failed:", error);
+
+      } catch (authError) {
+        console.error("Authentication failed:", authError);
+        this.toast.error("Login failed. Please check your credentials.");
       }
     },
     logout() {
@@ -213,12 +241,17 @@ export default {
 </script>
 
 <style>
-
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  height: 100%;
+  
+}
+body {
   font-family: Arial, sans-serif;
   background: linear-gradient(135deg, #967a7a, #ca5e5e);
   min-height: 100vh;
+  margin: 0;
 }
 
 .main-layout {
@@ -226,6 +259,9 @@ body {
   min-height: 100vh;
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  margin: 0;
+  overflow: hidden; /* Скрываем всё, что выходит за границы */
+  
 }
 
 .sidebar {
@@ -301,8 +337,8 @@ body {
 
 .content {
   flex-grow: 1;
-  padding: 20px;
-  margin-top: 60px;
+  padding: 10px;
+  margin-top: 10px;
 }
 .back-button {
   background-color: #292961;

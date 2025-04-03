@@ -1,13 +1,13 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, Query
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, HTTPBearer, HTTPAuthorizationCredentials
 from motor.motor_asyncio import AsyncIOMotorClient
 from jose import JWTError, jwt
 from passlib.hash import argon2
 from datetime import datetime, timedelta
-from bson import ObjectId  
+from bson import ObjectId  # Добавьте в начале файла
 from typing import Optional
 from beanie import init_beanie
-from models import ProjectDB, FileDB, EstimateDB, RecordDB, UserDB, PyObjectId, UserRole
+from models import ProjectDB, FileDB, EstimateDB, RecordDB, UserDB, PyObjectId, UserRole, ActivityLog
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -35,7 +35,7 @@ async def startup_db_client():
     client = AsyncIOMotorClient("mongodb://localhost:27017")
     await init_beanie(
         database=client.testDB_Velocimetry_v2,
-        document_models=[ProjectDB, FileDB, EstimateDB, RecordDB, UserDB],  # Добавьте UserDB
+        document_models=[ProjectDB, FileDB, EstimateDB, RecordDB, UserDB, ActivityLog],  # Добавьте UserDB
     )
 
 # Функция для хэширования пароля
@@ -350,11 +350,32 @@ async def delete_estimate(estimate_id: str):
 async def get_all_records():
     records = await RecordDB.find_all().to_list()
     return records
-
+    
 @app.get("/records/by_estimate/{estimate_id}", response_model=list[RecordDB])
 async def get_records_by_estimate(estimate_id: str):
-    records = await RecordDB.find({"estimate_id": {"$in": [PyObjectId(estimate_id)]}}).to_list()
-    return records
+    from bson import ObjectId
+    try:
+        obj_id = ObjectId(estimate_id) if ObjectId.is_valid(estimate_id) else estimate_id
+        records = await RecordDB.find({"estimate_id": {"$in": [obj_id]}}).to_list()
+        print(f"Found {len(records)} records with ObjectId")
+        
+        # Сортировка на сервере
+        type_priority = {
+            "meta_crack_model": 1,
+            "interface_moire": 2,
+            "velocimetry": 3,
+            "meta_record": 4
+        }
+        
+        records.sort(key=lambda x: (
+            type_priority.get(x.tag, 4),
+            x.frame if isinstance(x.frame, int) else 0
+        ))
+        
+        return records
+    except Exception as e:
+        print(f"Error fetching records: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/records/{record_id}", response_model=RecordDB)
 async def get_record(record_id: str):
@@ -365,6 +386,11 @@ async def get_record(record_id: str):
 
 @app.post("/records/", response_model=RecordDB)
 async def create_record(record: RecordDB):
+    from bson import ObjectId
+    record.estimate_id = [
+        ObjectId(eid) if isinstance(eid, str) and ObjectId.is_valid(eid) 
+        else eid for eid in record.estimate_id
+    ]
     await record.create()
     return record
 
@@ -386,3 +412,58 @@ async def delete_record(record_id: str):
         raise HTTPException(status_code=404, detail="Record not found")
     await record.delete()
     return {"message": "Record deleted"}
+
+@app.get("/admin/activity", response_model=list[ActivityLog])
+async def get_activity_logs(
+    user_id: Optional[str] = Query(None, description="Filter by user ID"),
+    action: Optional[str] = Query(None, description="Filter by action type"),
+    date_from: Optional[datetime] = Query(None, description="Start date (YYYY-MM-DD)"),
+    date_to: Optional[datetime] = Query(None, description="End date (YYYY-MM-DD)"),
+    current_user: UserDB = Depends(get_current_admin)  # Требуем админских прав
+):
+    # Базовый запрос
+    query = {}
+    
+    # Фильтрация по пользователю
+    if user_id:
+        query["user_id"] = user_id
+    
+    # Фильтрация по типу действия
+    if action:
+        query["action"] = action
+    
+    # Фильтрация по дате
+    if date_from or date_to:
+        query["timestamp"] = {}
+        if date_from:
+            query["timestamp"]["$gte"] = date_from
+        if date_to:
+            # Добавляем 1 день чтобы включить всю конечную дату
+            query["timestamp"]["$lte"] = date_to + timedelta(days=1)
+    
+    # Выполняем запрос с сортировкой по времени
+    logs = await ActivityLog.find(query).sort("-timestamp").to_list()
+    
+    return logs
+
+from pydantic import BaseModel
+class ActivityLogCreate(BaseModel):
+    action: str
+    entity_type: Optional[str] = None
+    entity_id: Optional[str] = None
+    details: Optional[str] = None
+
+@app.post("/admin/activity", response_model=ActivityLog)
+async def create_activity_log(
+    log_data: ActivityLogCreate,
+    current_user: UserDB = Depends(get_current_user)
+):
+    log = ActivityLog(
+        user_id=str(current_user.id),
+        action=log_data.action,
+        entity_type=log_data.entity_type,
+        entity_id=log_data.entity_id,
+        details=log_data.details or ""
+    )
+    await log.create()
+    return log
