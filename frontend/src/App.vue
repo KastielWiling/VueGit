@@ -354,4 +354,46 @@ body {
 .back-button:hover {
   background-color: #3a3a7a;
 }
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  width: 300px;
+  z-index: 1001;
+}
+
+.modal h2 {
+  margin-top: 0;
+}
+
+.modal input {
+  width: 90%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.modal button {
+  padding: 8px 16px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal button:first-of-type {
+  background-color: #292961;
+  color: white;
+}
+
+.modal button:last-of-type {
+  background-color: #f0f0f0;
+}
 </style>
