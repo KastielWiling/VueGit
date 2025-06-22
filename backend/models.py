@@ -162,14 +162,22 @@ class UserDB(User, Document):
 
 class ActivityLog(Document):
     user_id: PyObjectId
+    user_name: Optional[str] = None  # Добавляем имя пользователя для удобства
     action: str
     entity_type: Optional[str] = None
     entity_id: Optional[PyObjectId] = None
+    entity_name: Optional[str] = None  # Добавляем имя сущности для удобства
     details: str = ""
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
         name = "activity_logs"
+        indexes = [
+            "user_id",
+            "action",
+            "entity_type",
+            "timestamp"
+        ]
 
     @field_validator('user_id', 'entity_id', mode='before')
     def convert_to_pyobjectid(cls, v):
@@ -178,3 +186,8 @@ class ActivityLog(Document):
         if isinstance(v, str) and ObjectId.is_valid(v):
             return v
         return None
+
+    async def set_user_info(self):
+        user = await UserDB.get(self.user_id)
+        if user:
+            self.user_name = user.username

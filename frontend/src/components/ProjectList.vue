@@ -73,25 +73,50 @@ export default {
       this.currentProjectId = project._id;
     },
     async saveProject() {
+    try {
       const payload = {
         name: this.projectForm.name,
         desc: this.projectForm.desc,
         something: [],
-        tag: this.projectForm.tag || 'default_tag', // Используем введенный тег или дефолтный
+        tag: this.projectForm.tag || 'default_tag',
       };
 
       if (this.isEditing) {
         await api.put(`/projects/${this.currentProjectId}`, payload);
+        await this.logAction('update', 'project', this.currentProjectId, `Updated project ${this.projectForm.name}`);
       } else {
-        await api.post('/projects/', payload);
+        const response = await api.post('/projects/', payload);
+        await this.logAction('create', 'project', response.data._id, `Created project ${this.projectForm.name}`);
       }
       this.closeModal();
       await this.fetchProjects();
-    },
-    async deleteProject(projectId) {
-      await api.delete(`/projects/${projectId}`);
-      await this.fetchProjects();
-    },
+    } catch (error) {
+      console.error("Error saving project:", error);
+    }
+  },
+  async deleteProject(projectId) {
+    if (confirm("Are you sure you want to delete this project?")) {
+      try {
+        const project = this.projects.find(p => p._id === projectId);
+        await api.delete(`/projects/${projectId}`);
+        await this.logAction('delete', 'project', projectId, `Deleted project ${project?.name}`);
+        await this.fetchProjects();
+      } catch (error) {
+        console.error("Error deleting project:", error);
+      }
+    }
+  },
+  async logAction(action, entityType, entityId, details = '') {
+    try {
+      await api.post('/admin/activity', {
+        action,
+        entityType,
+        entityId,
+        details
+      });
+    } catch (error) {
+      console.error('Error logging action:', error);
+    }},
     closeModal() {
       this.isModalOpen = false;
     },

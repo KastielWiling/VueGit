@@ -110,294 +110,296 @@
 
       <!-- Projects -->
       <div v-show="activeTab === 'projects'" class="section">
-  <div class="section-header">
-    <h2>Projects Management</h2>
-    <div class="controls">
-      <div class="search-box">
-        <input 
-          v-model="searchQuery" 
-          placeholder="Search projects..." 
-          @keyup.enter="fetchProjects"
-        >
-        <i class="fas fa-search"></i>
-      </div>
-      <button @click="openCreateProjectModal" class="create-button">
-        <i class="fas fa-plus"></i> Add Project
-      </button>
-    </div>
-  </div>
-  
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th @click="sortTable('name')">
-            Name
-            <i class="fas" :class="sortIcon('name')"></i>
-          </th>
-          <th>Description</th>
-          <th @click="sortTable('tag')">
-            Tag
-            <i class="fas" :class="sortIcon('tag')"></i>
-          </th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="project in paginatedItems" :key="project._id">
-          <td>{{ project.name }}</td>
-          <td>{{ project.desc }}</td>
-          <td>{{ project.tag }}</td>
-          <td class="actions">
-            <button @click="editProject(project)" class="edit" title="Edit">
-              <i class="fas fa-edit"></i>
+        <div class="section-header">
+          <h2>Projects Management</h2>
+          <div class="controls">
+            <div class="search-box">
+              <input 
+                v-model="searchQuery" 
+                placeholder="Search projects..." 
+                @keyup.enter="fetchProjects"
+              >
+              <i class="fas fa-search"></i>
+            </div>
+            <button @click="openCreateProjectModal" class="create-button">
+              <i class="fas fa-plus"></i> Add Project
             </button>
-            <button @click="confirmDelete(project._id, 'project')" class="delete" title="Delete">
-              <i class="fas fa-trash"></i>
-            </button>
-          </td>
-        </tr>
-        <tr v-if="filteredItems.length === 0">
-          <td colspan="4" class="no-results">No projects found</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+          </div>
+        </div>
+        
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th @click="sortTable('name')">
+                  Name
+                  <i class="fas" :class="sortIcon('name')"></i>
+                </th>
+                <th>Description</th>
+                <th @click="sortTable('tag')">
+                  Tag
+                  <i class="fas" :class="sortIcon('tag')"></i>
+                </th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="project in paginatedItems" :key="project._id">
+                <td>{{ project.name }}</td>
+                <td>{{ project.desc }}</td>
+                <td>{{ project.tag }}</td>
+                <td class="actions">
+                  <button @click="editProject(project)" class="edit" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button @click="confirmDelete(project._id, 'project')" class="delete" title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr v-if="filteredItems.length === 0">
+                <td colspan="4" class="no-results">No projects found</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-  <!-- Пагинация -->
-  <div class="pagination-controls">
-    <div class="items-per-page">
-      <span>Items per page:</span>
-      <select v-model="itemsPerPage" @change="currentPage = 1">
-        <option value="5">5</option>
-        <option value="10">10</option>
-        <option value="20">20</option>
-        <option value="50">50</option>
-      </select>
-    </div>
-    <div class="pagination-buttons">
-      <button @click="prevPage" :disabled="currentPage === 1">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <span>Page {{ currentPage }} of {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="currentPage === totalPages">
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </div>
-  </div>
-</div>
+        <!-- Пагинация -->
+        <div class="pagination-controls">
+          <div class="items-per-page">
+            <span>Items per page:</span>
+            <select v-model="itemsPerPage" @change="currentPage = 1">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+          <div class="pagination-buttons">
+            <button @click="prevPage" :disabled="currentPage === 1">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span>Page {{ currentPage }} of {{ totalPages }}</span>
+            <button @click="nextPage" :disabled="currentPage === totalPages">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- Files -->
       <div v-show="activeTab === 'files'" class="section">
-  <div class="section-header">
-    <h2>Files Management</h2>
-    <div class="controls">
-      <div class="search-box">
-        <input 
-          v-model="searchQuery" 
-          placeholder="Search files..." 
-          @keyup.enter="fetchFiles"
-        >
-        <i class="fas fa-search"></i>
-      </div>
-      <button @click="openCreateFileModal" class="create-button">
-        <i class="fas fa-plus"></i> Add File
-      </button>
-    </div>
-  </div>
-  
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th @click="sortTable('name')">
-            Name
-            <i class="fas" :class="sortIcon('name')"></i>
-          </th>
-          <th>File Path</th>
-          <th @click="sortTable('tag')">
-            Type
-            <i class="fas" :class="sortIcon('tag')"></i>
-          </th>
-          <th>Frame Count</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="file in paginatedItems" :key="file._id">
-          <td>{{ file.name }}</td>
-          <td>{{ file.filePath }}</td>
-          <td>{{ file.tag }}</td>
-          <td>{{ file.frameCount }}</td>
-          <td class="actions">
-            <button @click="editFile(file)" class="edit" title="Edit">
-              <i class="fas fa-edit"></i>
+        <div class="section-header">
+          <h2>Files Management</h2>
+          <div class="controls">
+            <div class="search-box">
+              <input 
+                v-model="searchQuery" 
+                placeholder="Search files..." 
+                @keyup.enter="fetchFiles"
+              >
+              <i class="fas fa-search"></i>
+            </div>
+            <button @click="openCreateFileModal" class="create-button">
+              <i class="fas fa-plus"></i> Add File
             </button>
-            <button @click="confirmDelete(file._id, 'file')" class="delete" title="Delete">
-              <i class="fas fa-trash"></i>
-            </button>
-          </td>
-        </tr>
-        <tr v-if="filteredItems.length === 0">
-          <td colspan="5" class="no-results">No files found</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+          </div>
+        </div>
+        
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th @click="sortTable('name')">
+                  Name
+                  <i class="fas" :class="sortIcon('name')"></i>
+                </th>
+                <th>File Path</th>
+                <th @click="sortTable('tag')">
+                  Type
+                  <i class="fas" :class="sortIcon('tag')"></i>
+                </th>
+                <th>Frame Count</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="file in paginatedItems" :key="file._id">
+                <td>{{ file.name }}</td>
+                <td>{{ file.filePath }}</td>
+                <td>{{ file.tag }}</td>
+                <td>{{ file.frameCount }}</td>
+                <td class="actions">
+                  <button @click="editFile(file)" class="edit" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button @click="confirmDelete(file._id, 'file')" class="delete" title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr v-if="filteredItems.length === 0">
+                <td colspan="5" class="no-results">No files found</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-  <div class="pagination-controls">
-    <div class="items-per-page">
-      <span>Items per page:</span>
-      <select v-model="itemsPerPage" @change="currentPage = 1">
-        <option value="5">5</option>
-        <option value="10">10</option>
-        <option value="20">20</option>
-        <option value="50">50</option>
-      </select>
-    </div>
-    <div class="pagination-buttons">
-      <button @click="prevPage" :disabled="currentPage === 1">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <span>Page {{ currentPage }} of {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="currentPage === totalPages">
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </div>
-  </div>
-</div>
+        <div class="pagination-controls">
+          <div class="items-per-page">
+            <span>Items per page:</span>
+            <select v-model="itemsPerPage" @change="currentPage = 1">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+          <div class="pagination-buttons">
+            <button @click="prevPage" :disabled="currentPage === 1">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span>Page {{ currentPage }} of {{ totalPages }}</span>
+            <button @click="nextPage" :disabled="currentPage === totalPages">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- Estimates -->
       <div v-show="activeTab === 'estimates'" class="section">
-  <div class="section-header">
-    <h2>Estimates Management</h2>
-    <div class="controls">
-      <div class="search-box">
-        <input 
-          v-model="searchQuery" 
-          placeholder="Search estimates..." 
-          @keyup.enter="fetchEstimates"
-        >
-        <i class="fas fa-search"></i>
-      </div>
-      <button @click="openCreateEstimateModal" class="create-button">
-        <i class="fas fa-plus"></i> Add Estimate
-      </button>
-    </div>
-  </div>
-  
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th @click="sortTable('tag')">
-            Tag
-            <i class="fas" :class="sortIcon('tag')"></i>
-          </th>
-          <th>Frame Interval</th>
-          <th>ROI</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="estimate in paginatedItems" :key="estimate._id">
-          <td>{{ estimate.tag }}</td>
-          <td>{{ estimate.frame_interval?.join(', ') || 'N/A' }}</td>
-          <td>{{ estimate.roi?.join(', ') || 'N/A' }}</td>
-          <td class="actions">
-            <button @click="editEstimate(estimate)" class="edit" title="Edit">
-              <i class="fas fa-edit"></i>
+        <div class="section-header">
+          <h2>Estimates Management</h2>
+          <div class="controls">
+            <div class="search-box">
+              <input 
+                v-model="searchQuery" 
+                placeholder="Search estimates..." 
+                @keyup.enter="fetchEstimates"
+              >
+              <i class="fas fa-search"></i>
+            </div>
+            <button @click="openCreateEstimateModal" class="create-button">
+              <i class="fas fa-plus"></i> Add Estimate
             </button>
-            <button @click="confirmDelete(estimate._id, 'estimate')" class="delete" title="Delete">
-              <i class="fas fa-trash"></i>
-            </button>
-          </td>
-        </tr>
-        <tr v-if="filteredItems.length === 0">
-          <td colspan="4" class="no-results">No estimates found</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+          </div>
+        </div>
+        
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th @click="sortTable('tag')">
+                  Tag
+                  <i class="fas" :class="sortIcon('tag')"></i>
+                </th>
+                <th>Frame Interval</th>
+                <th>ROI</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="estimate in paginatedItems" :key="estimate._id">
+                <td>{{ estimate.tag }}</td>
+                <td>{{ estimate.frame_interval?.join(', ') || 'N/A' }}</td>
+                <td>{{ estimate.roi?.join(', ') || 'N/A' }}</td>
+                <td class="actions">
+                  <button @click="editEstimate(estimate)" class="edit" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button @click="confirmDelete(estimate._id, 'estimate')" class="delete" title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr v-if="filteredItems.length === 0">
+                <td colspan="4" class="no-results">No estimates found</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-  <div class="pagination-controls">
-    <div class="items-per-page">
-      <span>Items per page:</span>
-      <select v-model="itemsPerPage" @change="currentPage = 1">
-        <option value="5">5</option>
-        <option value="10">10</option>
-        <option value="20">20</option>
-        <option value="50">50</option>
-      </select>
-    </div>
-    <div class="pagination-buttons">
-      <button @click="prevPage" :disabled="currentPage === 1">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <span>Page {{ currentPage }} of {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="currentPage === totalPages">
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </div>
-  </div>
-</div>
-<!-- User Activity -->
-<div v-show="activeTab === 'activity'" class="section">
-  <div class="section-header">
-    <h2>User Activity Log</h2>
-    <div class="controls">
-      <div class="filters">
-        <select v-model="activityFilters.user" @change="fetchActivityLogs">
-          <option value="">All Users</option>
-          <option v-for="user in users" :value="user._id" :key="user._id"> {{ user.username }} </option>
-        </select>
-        
-        <select v-model="activityFilters.action" @change="fetchActivityLogs">
-          <option value="">All Actions</option>
-          <option value="create">Create</option>
-          <option value="update">Update</option>
-          <option value="delete">Delete</option>
-          <option value="login">Login</option>
-        </select>
-        
-        <input type="date" v-model="activityFilters.dateFrom" @change="fetchActivityLogs">
-        <input type="date" v-model="activityFilters.dateTo" @change="fetchActivityLogs">
+        <div class="pagination-controls">
+          <div class="items-per-page">
+            <span>Items per page:</span>
+            <select v-model="itemsPerPage" @change="currentPage = 1">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+          <div class="pagination-buttons">
+            <button @click="prevPage" :disabled="currentPage === 1">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span>Page {{ currentPage }} of {{ totalPages }}</span>
+            <button @click="nextPage" :disabled="currentPage === totalPages">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-  
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>User</th>
-          <th>Action</th>
-          <th>Entity</th>
-          <th>Details</th>
-          <th>Timestamp</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="log in activityLogs" :key="log._id">
-          <td>{{ log.user_name || 'Unknown' }}</td>
-          <td>{{ log.action }}</td>
-          <td>{{ log.entity_type }}: {{ log.entity_name || log.entity_id }}</td>
-          <td>{{ log.details }}</td>
-          <td>{{ formatDate(log.timestamp) }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-<!-- В template AdminPanel.vue, в разделе stats -->
-<div v-show="activeTab === 'stats'" class="section">
-  <h2>Projects Statistics</h2>
-  <ProjectsHistogram 
-    :projects="projects" 
-    :files="files"
-    @project-selected="onProjectSelected"
-  />
-</div>
+
+      <!-- User Activity -->
+      <div v-show="activeTab === 'activity'" class="section">
+        <div class="section-header">
+          <h2>User Activity Log</h2>
+          <div class="controls">
+            <div class="filters">
+              <select v-model="activityFilters.user" @change="fetchActivityLogs">
+                <option value="">All Users</option>
+                <option v-for="user in users" :value="user._id" :key="user._id"> {{ user.username }} </option>
+              </select>
+              
+              <select v-model="activityFilters.action" @change="fetchActivityLogs">
+                <option value="">All Actions</option>
+                <option value="create">Create</option>
+                <option value="update">Update</option>
+                <option value="delete">Delete</option>
+                <option value="login">Login</option>
+              </select>
+              
+              <input type="date" v-model="activityFilters.dateFrom" @change="fetchActivityLogs">
+              <input type="date" v-model="activityFilters.dateTo" @change="fetchActivityLogs">
+            </div>
+          </div>
+        </div>
+        
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Action</th>
+                <th>Entity</th>
+                <th>Details</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="log in activityLogs" :key="log._id">
+                <td>{{ log.user_name || 'Unknown' }}</td>
+                <td>{{ log.action }}</td>
+                <td>{{ log.entity_type }}: {{ log.entity_name || log.entity_id }}</td>
+                <td>{{ log.details }}</td>
+                <td>{{ formatDate(log.timestamp) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Statistics -->
+      <div v-show="activeTab === 'stats'" class="section">
+        <h2>Projects Statistics</h2>
+        <ProjectsHistogram 
+          :projects="projects" 
+          :files="files"
+          @project-selected="onProjectSelected"
+        />
+      </div>
     </div>
 
     <!-- Модальные окна -->
@@ -548,34 +550,34 @@
     </div>
 
     <div v-if="selectedProjectModal" class="modal-overlay" @click.self="closeProjectModalHist">
-  <div class="modal-content">
-    <h2>Project Details: {{ selectedProjectModal.name }}</h2>
-    
-    <div class="project-stats">
-      <div class="stat-item">
-        <span class="stat-label">Files:</span>
-        <span class="stat-value">{{ selectedProjectStats.fileCount }}</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">Created:</span>
-        <span class="stat-value">{{ formatDate(selectedProjectModal.createdAt) }}</span>
+      <div class="modal-content">
+        <h2>Project Details: {{ selectedProjectModal.name }}</h2>
+        
+        <div class="project-stats">
+          <div class="stat-item">
+            <span class="stat-label">Files:</span>
+            <span class="stat-value">{{ selectedProjectStats.fileCount }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Created:</span>
+            <span class="stat-value">{{ formatDate(selectedProjectModal.createdAt) }}</span>
+          </div>
+        </div>
+        
+        <div class="project-actions">
+          <button @click="openEditProjectModal(selectedProjectModal)" class="action-button">
+            <i class="fas fa-edit"></i> Edit Project
+          </button>
+          <button @click="confirmDelete(selectedProjectModal._id, 'project')" class="action-button delete">
+            <i class="fas fa-trash"></i> Delete Project
+          </button>
+        </div>
+        
+        <button @click="closeProjectModalHist" class="cancel-button">
+          <i class="fas fa-times"></i> Close
+        </button>
       </div>
     </div>
-    
-    <div class="project-actions">
-      <button @click="openEditProjectModal(selectedProjectModal)" class="action-button">
-        <i class="fas fa-edit"></i> Edit Project
-      </button>
-      <button @click="confirmDelete(selectedProjectModal._id, 'project')" class="action-button delete">
-        <i class="fas fa-trash"></i> Delete Project
-      </button>
-    </div>
-    
-    <button @click="closeProjectModalHist" class="cancel-button">
-      <i class="fas fa-times"></i> Close
-    </button>
-  </div>
-</div>
 
     <!-- Диалог подтверждения удаления -->
     <div v-if="showDeleteConfirm" class="confirm-dialog-overlay">
@@ -588,7 +590,6 @@
         </div>
       </div>
     </div>
-    
   </div>
 </template>
 
@@ -598,16 +599,15 @@ import { useToast } from 'vue-toastification';
 import ProjectsHistogram from '@/components/ProjectsHistogram.vue';
 
 export default {
+  components: {
+    ProjectsHistogram
+  },
   setup() {
     const toast = useToast();
     return { toast };
   },
-  components: {
-    ProjectsHistogram
-  },
   data() {
     return {
-      // Навигация
       activeTab: 'users',
       tabs: [
         { label: 'Users', value: 'users', count: 0 },
@@ -617,12 +617,8 @@ export default {
         { label: 'Activity Log', value: 'activity', count: 0 },
         { label: 'Statistics', value: 'stats', count: 0 }
       ],
-      // Под гистограмму
       selectedProjectModal: null,
-      selectedProjectStats: {
-        fileCount: 0
-      },
-      // История действий
+      selectedProjectStats: { fileCount: 0 },
       activityLogs: [],
       activityFilters: {
         user: null,
@@ -630,27 +626,18 @@ export default {
         dateFrom: null,
         dateTo: null
       },
-      // Данные
       users: [],
       projects: [],
       files: [],
       estimates: [],
-      
-      // Поиск и сортировка
       searchQuery: '',
       sortConfig: {
         key: 'username',
         direction: 'asc'
       },
-      
-      // Пагинация
       currentPage: 1,
       itemsPerPage: 10,
-      
-      // Состояние загрузки
       isLoading: false,
-      
-      // Модальные окна
       isUserModalOpen: false,
       isEditingUser: false,
       userForm: {
@@ -660,7 +647,6 @@ export default {
         role: 'user'
       },
       currentUserId: null,
-      
       isProjectModalOpen: false,
       isEditingProject: false,
       projectForm: {
@@ -669,7 +655,6 @@ export default {
         tag: 'default_tag'
       },
       currentProjectId: null,
-      
       isFileModalOpen: false,
       isEditingFile: false,
       fileForm: {
@@ -682,7 +667,6 @@ export default {
         projectID: null
       },
       currentFileId: null,
-      
       isEstimateModalOpen: false,
       isEditingEstimate: false,
       estimateForm: {
@@ -692,15 +676,12 @@ export default {
         file_id: null
       },
       currentEstimateId: null,
-      
-      // Подтверждение удаления
       showDeleteConfirm: false,
       itemToDeleteId: null,
       itemToDeleteType: null
     };
   },
   computed: {
-    // Текущие элементы для активной вкладки
     currentItems() {
       switch (this.activeTab) {
         case 'users': return this.users;
@@ -711,48 +692,39 @@ export default {
       }
     },
     
-    // Отфильтрованные элементы
     filteredItems() {
       let filtered = this.currentItems;
       
       if (this.searchQuery) {
         const query = this.searchQuery.toLowerCase();
         filtered = filtered.filter(item => {
-          // Для пользователей
           if (this.activeTab === 'users') {
             return (
               item.username.toLowerCase().includes(query) ||
               item.email.toLowerCase().includes(query) ||
-              item.role.toLowerCase().includes(query))
-          }
-          // Для проектов
-          else if (this.activeTab === 'projects') {
+              item.role.toLowerCase().includes(query));
+          } else if (this.activeTab === 'projects') {
             return (
               item.name.toLowerCase().includes(query) ||
               item.desc.toLowerCase().includes(query) ||
-              item.tag.toLowerCase().includes(query))
-          }
-          // Для файлов
-          else if (this.activeTab === 'files') {
+              item.tag.toLowerCase().includes(query));
+          } else if (this.activeTab === 'files') {
             return (
               item.name.toLowerCase().includes(query) ||
               item.filePath.toLowerCase().includes(query) ||
-              item.tag.toLowerCase().includes(query))
-          }
-          // Для оценок
-          else if (this.activeTab === 'estimates') {
+              item.tag.toLowerCase().includes(query));
+          } else if (this.activeTab === 'estimates') {
             const frameInterval = item.frame_interval ? item.frame_interval.join(',') : '';
             const roi = item.roi ? item.roi.join(',') : '';
             return (
               item.tag?.toLowerCase().includes(query) ||
               frameInterval.toLowerCase().includes(query) ||
-              roi.toLowerCase().includes(query))
+              roi.toLowerCase().includes(query));
           }
           return true;
         });
       }
       
-      // Сортировка
       return filtered.sort((a, b) => {
         if (a[this.sortConfig.key] < b[this.sortConfig.key]) {
           return this.sortConfig.direction === 'asc' ? -1 : 1;
@@ -764,19 +736,16 @@ export default {
       });
     },
     
-    // Элементы для текущей страницы
     paginatedItems() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
       return this.filteredItems.slice(start, end);
     },
     
-    // Общее количество страниц
     totalPages() {
       return Math.ceil(this.filteredItems.length / this.itemsPerPage);
     },
     
-    // Иконка сортировки
     sortIcon() {
       return (key) => ({
         'fa-sort': this.sortConfig.key !== key,
@@ -796,7 +765,6 @@ export default {
     await this.loadData();
   },
   methods: {
-    // Загрузка данных
     async loadData() {
       this.isLoading = true;
       try {
@@ -827,7 +795,7 @@ export default {
         this.isLoading = false;
       }
     },
-    // Под гистограмму
+    
     onProjectSelected(project) {
       this.selectedProjectModal = project;
       this.calculateProjectStats(project);
@@ -851,13 +819,12 @@ export default {
     
     openEditProjectModal(project) {
       this.closeProjectModal();
-      this.selectedProjectModal = null; // Сначала закрываем модалку деталей
-    this.$nextTick(() => {
-      this.editProject(project); // Затем открываем модалку редактирования
-    });
+      this.selectedProjectModal = null;
+      this.$nextTick(() => {
+        this.editProject(project);
+      });
     },
 
-    // Получение истории действий
     async fetchActivityLogs() {
       try {
         const params = {
@@ -874,23 +841,7 @@ export default {
         this.toast.error('Failed to load activity logs');
       }
     },
-    getUserName(userId) {
-      const user = this.users.find(u => u._id === userId);
-      return user ? user.username : 'Unknown';
-    },
-    async logAction(action, entityType = null, entityId = null, details = '') {
-  try {
-    await api.post('/admin/activity', {
-      action,
-      entity_type: entityType,
-      entity_id: entityId,
-      details
-    });
-  } catch (error) {
-    console.error('Error logging action:', error);
-  }
-},
-    // Получение пользователей
+
     async fetchUsers() {
       try {
         const response = await api.get('/admin/users/');
@@ -901,7 +852,6 @@ export default {
       }
     },
     
-    // Получение проектов
     async fetchProjects() {
       try {
         const response = await api.get('/projects/');
@@ -912,7 +862,6 @@ export default {
       }
     },
     
-    // Получение файлов
     async fetchFiles() {
       try {
         const response = await api.get('/files/');
@@ -923,7 +872,6 @@ export default {
       }
     },
     
-    // Получение оценок
     async fetchEstimates() {
       try {
         const response = await api.get('/estimates/');
@@ -938,7 +886,6 @@ export default {
       }
     },
     
-    // Сортировка таблицы
     sortTable(key) {
       if (this.sortConfig.key === key) {
         this.sortConfig.direction = this.sortConfig.direction === 'asc' ? 'desc' : 'asc';
@@ -948,7 +895,6 @@ export default {
       }
     },
     
-    // Навигация по страницам
     nextPage() {
       if (this.currentPage < this.totalPages) this.currentPage++;
     },
@@ -957,14 +903,12 @@ export default {
       if (this.currentPage > 1) this.currentPage--;
     },
     
-    // Подтверждение удаления
     confirmDelete(id, type) {
       this.itemToDeleteId = id;
       this.itemToDeleteType = type;
       this.showDeleteConfirm = true;
     },
     
-    // Выполнение удаления
     async executeDelete() {
       try {
         let endpoint = '';
@@ -985,7 +929,6 @@ export default {
         
         await api.delete(endpoint);
         
-        // Логируем действие
         await this.logAction(
           'delete', 
           this.itemToDeleteType, 
@@ -1002,14 +945,12 @@ export default {
       }
     },
     
-    // Отмена удаления
     cancelDelete() {
       this.itemToDeleteId = null;
       this.itemToDeleteType = null;
       this.showDeleteConfirm = false;
     },
     
-    // Открытие модальных окон создания
     openCreateUserModal() {
       this.isUserModalOpen = true;
       this.isEditingUser = false;
@@ -1056,7 +997,6 @@ export default {
       };
     },
     
-    // Редактирование элементов
     editUser(user) {
       this.isUserModalOpen = true;
       this.isEditingUser = true;
@@ -1095,7 +1035,6 @@ export default {
       this.currentEstimateId = estimate._id;
     },
     
-    // Сохранение элементов
     async saveUser() {
       try {
         const payload = { ...this.userForm };
@@ -1103,7 +1042,6 @@ export default {
         if (this.isEditingUser) {
           await api.put(`/admin/users/${this.currentUserId}`, payload);
           
-          // Логируем действие
           await this.logAction(
             'update', 
             'user', 
@@ -1115,7 +1053,6 @@ export default {
         } else {
           const response = await api.post('/admin/users/', payload);
           
-          // Логируем действие
           await this.logAction(
             'create', 
             'user', 
@@ -1140,7 +1077,6 @@ export default {
         if (this.isEditingProject) {
           await api.put(`/projects/${this.currentProjectId}`, payload);
           
-          // Логируем действие
           await this.logAction(
             'update', 
             'project', 
@@ -1152,7 +1088,6 @@ export default {
         } else {
           const response = await api.post('/projects/', payload);
           
-          // Логируем действие
           await this.logAction(
             'create', 
             'project', 
@@ -1189,7 +1124,6 @@ export default {
         if (this.isEditingFile) {
           await api.put(`/files/${this.currentFileId}`, payload);
           
-          // Логируем действие
           await this.logAction(
             'update', 
             'file', 
@@ -1201,7 +1135,6 @@ export default {
         } else {
           const response = await api.post('/files/', payload);
           
-          // Логируем действие
           await this.logAction(
             'create', 
             'file', 
@@ -1232,7 +1165,6 @@ export default {
         if (this.isEditingEstimate) {
           await api.put(`/estimates/${this.currentEstimateId}`, payload);
           
-          // Логируем действие
           await this.logAction(
             'update', 
             'estimate', 
@@ -1244,7 +1176,6 @@ export default {
         } else {
           const response = await api.post('/estimates/', payload);
           
-          // Логируем действие
           await this.logAction(
             'create', 
             'estimate', 
@@ -1262,7 +1193,19 @@ export default {
       }
     },
     
-    // Закрытие модальных окон
+    async logAction(action, entityType, entityId, details = '') {
+      try {
+        await api.post('/admin/activity', {
+          action,
+          entity_type: entityType,
+          entity_id: entityId,
+          details
+        });
+      } catch (error) {
+        console.error('Error logging action:', error);
+      }
+    },
+    
     closeUserModal() {
       this.isUserModalOpen = false;
     },
@@ -1283,17 +1226,6 @@ export default {
 </script>
 
 <style scoped>
-.filters {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.filters select, .filters input {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
 .admin-panel {
   padding: 20px;
   max-width: 1200px;
@@ -1306,7 +1238,6 @@ h1 {
   margin-bottom: 20px;
 }
 
-/* Стили для вкладок */
 .tabs {
   display: flex;
   border-bottom: 1px solid #ddd;
@@ -1344,7 +1275,6 @@ h1 {
   margin-left: 5px;
 }
 
-/* Секции */
 .section {
   margin-bottom: 30px;
 }
@@ -1407,7 +1337,6 @@ h1 {
   transform: translateY(-2px);
 }
 
-/* Таблица */
 .table-container {
   overflow-x: auto;
   background: white;
@@ -1497,7 +1426,6 @@ th i {
   color: #999;
 }
 
-/* Пагинация */
 .pagination-controls {
   display: flex;
   justify-content: space-between;
@@ -1536,7 +1464,6 @@ th i {
   cursor: not-allowed;
 }
 
-/* Модальные окна */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1630,7 +1557,6 @@ th i {
   opacity: 0.9;
 }
 
-/* Диалог подтверждения */
 .confirm-dialog-overlay {
   position: fixed;
   top: 0;
@@ -1686,7 +1612,6 @@ th i {
   cursor: pointer;
 }
 
-/* Индикатор загрузки */
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -1714,42 +1639,18 @@ th i {
   100% { transform: rotate(360deg); }
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-  .tabs {
-    overflow-x: auto;
-    padding-bottom: 5px;
-  }
-  
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .controls {
-    width: 100%;
-    flex-direction: column;
-  }
-  
-  .search-box {
-    width: 100%;
-  }
-  
-  .search-box input {
-    width: 100%;
-    min-width: auto;
-  }
-  
-  .create-button {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .pagination-controls {
-    flex-direction: column;
-    gap: 15px;
-  }
+.filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
+
+.filters select, .filters input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
 .project-stats {
   display: flex;
   gap: 30px;
@@ -1807,5 +1708,41 @@ th i {
 
 .action-button.delete:hover {
   background: #ffcdd2;
+}
+
+@media (max-width: 768px) {
+  .tabs {
+    overflow-x: auto;
+    padding-bottom: 5px;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .controls {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .search-box {
+    width: 100%;
+  }
+  
+  .search-box input {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .create-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .pagination-controls {
+    flex-direction: column;
+    gap: 15px;
+  }
 }
 </style>

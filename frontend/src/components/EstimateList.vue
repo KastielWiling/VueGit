@@ -149,56 +149,64 @@ export default {
     },
 
     async handleSaveEstimate(estimateData) {
-      try {
-        // Преобразование данных в правильный формат
-        const frameInterval = typeof estimateData.frame_interval === 'string'
-          ? estimateData.frame_interval.split(',').map(Number).filter(n => !isNaN(n))
-          : estimateData.frame_interval;
-        
-        const roi = typeof estimateData.roi === 'string'
-          ? estimateData.roi.split(',').map(Number).filter(n => !isNaN(n))
-          : estimateData.roi;
+    try {
+      const frameInterval = typeof estimateData.frame_interval === 'string'
+        ? estimateData.frame_interval.split(',').map(Number).filter(n => !isNaN(n))
+        : estimateData.frame_interval;
+      
+      const roi = typeof estimateData.roi === 'string'
+        ? estimateData.roi.split(',').map(Number).filter(n => !isNaN(n))
+        : estimateData.roi;
 
-        const payload = {
-          file_id: [this.fileId],
-          frame_interval: frameInterval,
-          roi: roi,
-          tag: estimateData.tag,
-          settings: {}
-        };
+      const payload = {
+        file_id: [this.fileId],
+        frame_interval: frameInterval,
+        roi: roi,
+        tag: estimateData.tag,
+        settings: {}
+      };
 
-        if (this.isEditing) {
-          await api.put(`/estimates/${this.currentEstimateId}`, payload);
-          alert("Estimate updated successfully");
-        } else {
-          await api.post('/estimates/', payload);
-          alert("Estimate created successfully");
-        }
-        
-        this.closeModal();
-        await this.fetchEstimates();
-      } catch (error) {
-        console.error("Error saving estimate:", error);
-        alert(`Error: ${error.response?.data?.message || error.message}`);
+      if (this.isEditing) {
+        await api.put(`/estimates/${this.currentEstimateId}`, payload);
+        await this.logAction('update', 'estimate', this.currentEstimateId, `Updated estimate ${estimateData.tag}`);
+      } else {
+        const response = await api.post('/estimates/', payload);
+        await this.logAction('create', 'estimate', response.data._id, `Created estimate ${estimateData.tag}`);
       }
-    },
+      
+      this.closeModal();
+      await this.fetchEstimates();
+    } catch (error) {
+      console.error("Error saving estimate:", error);
+    }
+  },
 
     async deleteEstimate(estimateId) {
-      if (confirm("Are you sure you want to delete this estimate?")) {
-        try {
-          await api.delete(`/estimates/${estimateId}`);
-          await this.fetchEstimates();
-          if (this.selectedEstimateId === estimateId) {
-            this.selectedEstimateId = null;
-          }
-          alert("Estimate deleted successfully");
-        } catch (error) {
-          console.error("Error deleting estimate:", error);
-          alert("Failed to delete estimate");
+    if (confirm("Are you sure you want to delete this estimate?")) {
+      try {
+        const estimate = this.estimates.find(e => e._id === estimateId);
+        await api.delete(`/estimates/${estimateId}`);
+        await this.logAction('delete', 'estimate', estimateId, `Deleted estimate ${estimate?.tag}`);
+        if (this.selectedEstimateId === estimateId) {
+          this.selectedEstimateId = null;
         }
+        await this.fetchEstimates();
+      } catch (error) {
+        console.error("Error deleting estimate:", error);
       }
-    },
-
+    }},
+    async logAction(action, entityType, entityId, details = '') {
+    try {
+      await api.post('/admin/activity', {
+        action,
+        entityType,
+        entityId,
+        details
+      });
+    } catch (error) {
+      console.error('Error logging action:', error);
+    }
+  },
     closeModal() {
       this.isModalOpen = false;
     }

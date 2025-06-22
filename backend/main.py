@@ -4,7 +4,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from jose import JWTError, jwt
 from passlib.hash import argon2
 from datetime import datetime, timedelta
-from bson import ObjectId  # Добавьте в начале файла
+from bson import ObjectId
 from typing import Optional
 from beanie import init_beanie
 from models import ProjectDB, FileDB, EstimateDB, RecordDB, UserDB, PyObjectId, UserRole, ActivityLog
@@ -23,7 +23,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080"],  # URL вашего Vue.js приложения
+    allow_origins=["http://localhost:8080"],  # URL Vue.js приложения
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,7 +35,7 @@ async def startup_db_client():
     client = AsyncIOMotorClient("mongodb://localhost:27017")
     await init_beanie(
         database=client.testDB_Velocimetry_v2,
-        document_models=[ProjectDB, FileDB, EstimateDB, RecordDB, UserDB, ActivityLog],  # Добавьте UserDB
+        document_models=[ProjectDB, FileDB, EstimateDB, RecordDB, UserDB, ActivityLog],  # UserDB
     )
 
 # Функция для хэширования пароля
@@ -415,34 +415,32 @@ async def delete_record(record_id: str):
 
 @app.get("/admin/activity", response_model=list[ActivityLog])
 async def get_activity_logs(
-    user_id: Optional[str] = Query(None, description="Filter by user ID"),
-    action: Optional[str] = Query(None, description="Filter by action type"),
-    date_from: Optional[datetime] = Query(None, description="Start date (YYYY-MM-DD)"),
-    date_to: Optional[datetime] = Query(None, description="End date (YYYY-MM-DD)"),
-    current_user: UserDB = Depends(get_current_admin)  # Требуем админских прав
+    user_id: Optional[str] = Query(None),
+    action: Optional[str] = Query(None),
+    date_from: Optional[datetime] = Query(None),
+    date_to: Optional[datetime] = Query(None),
+    current_user: UserDB = Depends(get_current_admin)
 ):
-    # Базовый запрос
     query = {}
-    
-    # Фильтрация по пользователю
     if user_id:
         query["user_id"] = user_id
-    
-    # Фильтрация по типу действия
     if action:
         query["action"] = action
-    
-    # Фильтрация по дате
     if date_from or date_to:
         query["timestamp"] = {}
         if date_from:
             query["timestamp"]["$gte"] = date_from
         if date_to:
-            # Добавляем 1 день чтобы включить всю конечную дату
             query["timestamp"]["$lte"] = date_to + timedelta(days=1)
     
-    # Выполняем запрос с сортировкой по времени
     logs = await ActivityLog.find(query).sort("-timestamp").to_list()
+    
+    # Дополняем информацию о пользователях и сущностях
+    for log in logs:
+        if not log.user_name:
+            user = await UserDB.get(log.user_id)
+            if user:
+                log.user_name = user.username
     
     return logs
 
@@ -458,11 +456,29 @@ async def create_activity_log(
     log_data: ActivityLogCreate,
     current_user: UserDB = Depends(get_current_user)
 ):
+    # Получаем информацию о сущности, если указаны тип и ID
+    entity_name = None
+    if log_data.entity_type and log_data.entity_id:
+        try:
+            if log_data.entity_type == 'project':
+                entity = await ProjectDB.get(log_data.entity_id)
+            elif log_data.entity_type == 'file':
+                entity = await FileDB.get(log_data.entity_id)
+            elif log_data.entity_type == 'estimate':
+                entity = await EstimateDB.get(log_data.entity_id)
+            
+            if entity:
+                entity_name = getattr(entity, 'name', getattr(entity, 'tag', str(entity.id)))
+        except Exception as e:
+            print(f"Error getting entity info: {e}")
+
     log = ActivityLog(
         user_id=str(current_user.id),
+        user_name=current_user.username,
         action=log_data.action,
         entity_type=log_data.entity_type,
         entity_id=log_data.entity_id,
+        entity_name=entity_name,
         details=log_data.details or ""
     )
     await log.create()

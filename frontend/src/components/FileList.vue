@@ -97,36 +97,57 @@ export default {
   this.currentFileId = file._id;
 },
 async saveFile() {
-  const payload = {
-    name: this.fileForm.name,
-    filePath: this.fileForm.filePath,
-    tag: this.fileForm.tag,
-    projectID: [this.projectId], // Убедитесь, что это строка
-    frameCount: this.fileForm.frameCount,
-    fps: this.fileForm.tag === 'meta_file' 
-      ? (this.fileForm.fps ? this.fileForm.fps.split(',').map(Number) : [])
-      : [],
-    frameSize: this.fileForm.tag === 'meta_file'
-      ? (this.fileForm.frameSize ? this.fileForm.frameSize.split(',').map(Number) : [])
-      : []
-  };
+    try {
+      const payload = {
+        name: this.fileForm.name,
+        filePath: this.fileForm.filePath,
+        tag: this.fileForm.tag,
+        projectID: [this.projectId],
+        frameCount: this.fileForm.frameCount,
+        fps: this.fileForm.tag === 'meta_file' 
+          ? (this.fileForm.fps ? this.fileForm.fps.split(',').map(Number) : [])
+          : [],
+        frameSize: this.fileForm.tag === 'meta_file'
+          ? (this.fileForm.frameSize ? this.fileForm.frameSize.split(',').map(Number) : [])
+          : []
+      };
 
-  try {
-    if (this.isEditing) {
-      await api.put(`/files/${this.currentFileId}`, payload);
-    } else {
-      await api.post('/files/', payload);
-    }
-    this.closeModal();
-    await this.fetchFiles();
-  } catch (error) {
-    console.error("Error saving file:", error);
-  }
-},
-    async deleteFile(fileId) {
-      await api.delete(`/files/${fileId}`);
+      if (this.isEditing) {
+        await api.put(`/files/${this.currentFileId}`, payload);
+        await this.logAction('update', 'file', this.currentFileId, `Updated file ${this.fileForm.name}`);
+      } else {
+        const response = await api.post('/files/', payload);
+        await this.logAction('create', 'file', response.data._id, `Created file ${this.fileForm.name}`);
+      }
+      this.closeModal();
       await this.fetchFiles();
-    },
+    } catch (error) {
+      console.error("Error saving file:", error);
+    }
+  },
+  async deleteFile(fileId) {
+    if (confirm("Are you sure you want to delete this file?")) {
+      try {
+        const file = this.files.find(f => f._id === fileId);
+        await api.delete(`/files/${fileId}`);
+        await this.logAction('delete', 'file', fileId, `Deleted file ${file?.name}`);
+        await this.fetchFiles();
+      } catch (error) {
+        console.error("Error deleting file:", error);
+      }
+    }},
+    async logAction(action, entityType, entityId, details = '') {
+    try {
+      await api.post('/admin/activity', {
+        action,
+        entityType,
+        entityId,
+        details
+      });
+    } catch (error) {
+      console.error('Error logging action:', error);
+    }
+  },
     closeModal() {
       this.isModalOpen = false;
     },
